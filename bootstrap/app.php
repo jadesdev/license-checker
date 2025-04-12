@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append([
             ForceJsonApi::class,
         ]);
+
+        $middleware->alias([
+            'admin'       => \App\Http\Middleware\Admin::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (Throwable $exception, Request $request) {
