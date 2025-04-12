@@ -58,7 +58,7 @@ class AccessKeyController extends Controller
         $rateLimitKey = 'ratelimit:' . md5($accessKey . $request->ip());
         $attempts = Cache::get($rateLimitKey, 0);
 
-        if ($attempts > 100) { // 100 attempts per hour
+        if ($attempts > 60) { // 100 attempts per hour
             return $this->createSignedResponse([
                 'valid' => false,
                 'message' => 'Rate limit exceeded. Try again later.',
@@ -82,7 +82,6 @@ class AccessKeyController extends Controller
         $log->url = $request->url;
 
         // Begin validation process
-        $isValid = false;
         $message = '';
         $expiresAt = null;
 
@@ -128,8 +127,8 @@ class AccessKeyController extends Controller
             ]);
         }
 
-        // Check if domain is allowed
-        if (!$this->isDomainAllowed($license, $domain)) {
+        // // Check if domain is allowed
+        if (!$this->isDomainAllowed($license, $domain) && !$license->allow_auto_registration ) {
             $message = 'Access key is not valid for this domain';
             $log->status = 'domain_mismatch';
             $log->message = $message;
@@ -167,9 +166,9 @@ class AccessKeyController extends Controller
                     return $this->createSignedResponse([
                         'valid' => false,
                         'message' => $message,
-                        'max_domains' => $license->max_domains,
-                        'current_domains' => $license->active_domains,
-                        'current_count' => count($license->active_domains),
+                        // 'max_domains' => $license->max_domains,
+                        // 'current_domains' => $license->active_domains,
+                        // 'current_count' => count($license->active_domains),
                         'timestamp' => time(),
                     ]);
                 }
@@ -177,7 +176,6 @@ class AccessKeyController extends Controller
         }
 
         // If we've made it here, the key is valid
-        $isValid = true;
         $message = 'Access key is valid';
         $expiresAt = $license->expires_at;
 
@@ -194,8 +192,8 @@ class AccessKeyController extends Controller
             'message' => $message,
             'expires_at' => $expiresAt,
             'tier' => $license->tier,
-            'features' => $license->features,
-            'metadata' => $license->metadata,
+            // 'features' => $license->features,
+            // 'metadata' => $license->metadata,
             'next_check_interval' => rand(6 * 3600, 24 * 3600), // 6-24 hours
             'timestamp' => time(),
         ]);

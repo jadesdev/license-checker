@@ -258,8 +258,8 @@ class LicenseController extends Controller
         $key->expires_at = $request->expires_at;
         $key->features = $request->features;
         $key->metadata = $request->metadata;
-        $key->allow_auto_registration = $request->has('allow_auto_registration');
-        $key->allow_localhost = $request->has('allow_localhost');
+        $key->allow_auto_registration = $request->boolean('allow_auto_registration');
+        $key->allow_localhost = $request->boolean('allow_localhost');
         $key->grace_period_hours = $request->filled('grace_period_hours') ? $request->grace_period_hours : 72;
         $key->save();
 
