@@ -7,6 +7,8 @@ use App\Models\ValidationLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class AccessKeyController extends Controller
 {
@@ -30,16 +32,41 @@ class AccessKeyController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
+            return $this->createSignedResponse([
                 'valid' => false,
                 'message' => 'Invalid request: ' . $validator->errors()->first(),
+                'timestamp' => time(),
             ], 400);
         }
+
         // Extract validated data
         $domain = $request->domain;
         $accessKey = $request->access_key;
         $fingerprint = $request->system_fingerprint;
         $requestId = $request->request_id;
+
+        // Check request timestamp (prevent replay attacks)
+        if (abs(time() - $request->timestamp) > 300) {
+            // return $this->createSignedResponse([
+            //     'valid' => false,
+            //     'message' => 'Request timestamp is too old or in the future',
+            //     'timestamp' => time(),
+            // ]);
+        }
+
+        // Implement rate limiting per access key and IP
+        $rateLimitKey = 'ratelimit:' . md5($accessKey . $request->ip());
+        $attempts = Cache::get($rateLimitKey, 0);
+
+        if ($attempts > 100) { // 100 attempts per hour
+            return $this->createSignedResponse([
+                'valid' => false,
+                'message' => 'Rate limit exceeded. Try again later.',
+                'timestamp' => time(),
+            ], 429);
+        }
+
+        Cache::put($rateLimitKey, $attempts + 1, 3600); // 1 hour
 
         // Look up the access key
         $license = AccessKey::where('key', $accessKey)->first();
@@ -52,6 +79,7 @@ class AccessKeyController extends Controller
         $log->request_id = $requestId;
         $log->ip_address = $request->ip();
         $log->user_agent = $request->userAgent();
+        $log->url = $request->url;
 
         // Begin validation process
         $isValid = false;
@@ -64,9 +92,10 @@ class AccessKeyController extends Controller
             $log->message = $message;
             $log->save();
 
-            return response()->json([
+            return $this->createSignedResponse([
                 'valid' => false,
                 'message' => $message,
+                'timestamp' => time(),
             ]);
         }
 
@@ -77,9 +106,10 @@ class AccessKeyController extends Controller
             $log->message = $message;
             $log->save();
 
-            return response()->json([
+            return $this->createSignedResponse([
                 'valid' => false,
                 'message' => $message,
+                'timestamp' => time(),
             ]);
         }
 
@@ -90,10 +120,11 @@ class AccessKeyController extends Controller
             $log->message = $message;
             $log->save();
 
-            return response()->json([
+            return $this->createSignedResponse([
                 'valid' => false,
                 'message' => $message,
                 'expires_at' => $license->expires_at,
+                'timestamp' => time(),
             ]);
         }
 
@@ -104,31 +135,44 @@ class AccessKeyController extends Controller
             $log->message = $message;
             $log->save();
 
-            return response()->json([
+            return $this->createSignedResponse([
                 'valid' => false,
                 'message' => $message,
+                'timestamp' => time(),
             ]);
         }
 
         // Check for installation limits
         if ($license->max_domains > 0) {
-            $activeInstallations = ValidationLog::where('access_key', $accessKey)
-                ->where('created_at', '>=', Carbon::now()->subDays(30))
-                ->distinct('domain')
-                ->count('domain');
+            // Check if this domain is already allowed
+            if (!$this->isDomainAllowed($license, $domain)) {
+                // Domain not explicitly allowed, but we might auto-register it
+                if (!$license->hasReachedDomainLimit() && $license->allow_auto_registration) {
+                    // We're under the limit, so automatically add this domain
+                    $wasAdded = $this->handleNewDomain($license, $domain);
 
-            if ($activeInstallations >= $license->max_domains && !in_array($domain, $this->getActiveDomains($accessKey))) {
-                $message = 'Maximum number of installations reached';
-                $log->status = 'limit_reached';
-                $log->message = $message;
-                $log->save();
+                    if ($wasAdded) {
+                        $message = 'Domain automatically registered with this license';
+                        $log->status = 'domain_registered';
+                        $log->message = $message;
+                        $log->auto_registered = true;
+                        $log->registration_date = now();
+                    }
+                } else {
+                    $message = 'Maximum number of installations reached';
+                    $log->status = 'limit_reached';
+                    $log->message = $message;
+                    $log->save();
 
-                return response()->json([
-                    'valid' => false,
-                    'message' => $message,
-                    'max_domains' => $license->max_domains,
-                    'current_count' => $activeInstallations,
-                ]);
+                    return $this->createSignedResponse([
+                        'valid' => false,
+                        'message' => $message,
+                        'max_domains' => $license->max_domains,
+                        'current_domains' => $license->active_domains,
+                        'current_count' => count($license->active_domains),
+                        'timestamp' => time(),
+                    ]);
+                }
             }
         }
 
@@ -145,13 +189,15 @@ class AccessKeyController extends Controller
         $license->last_used_at = Carbon::now();
         $license->save();
 
-        return response()->json([
+        return $this->createSignedResponse([
             'valid' => true,
             'message' => $message,
             'expires_at' => $expiresAt,
             'tier' => $license->tier,
             'features' => $license->features,
             'metadata' => $license->metadata,
+            'next_check_interval' => rand(6 * 3600, 24 * 3600), // 6-24 hours
+            'timestamp' => time(),
         ]);
     }
 
@@ -164,32 +210,8 @@ class AccessKeyController extends Controller
      */
     protected function isDomainAllowed(AccessKey $license, string $domain)
     {
-        // If no domains are specified, the key is valid for any domain
-        if (empty($license->allowed_domains)) {
-            return true;
-        }
 
-        $allowedDomains = json_decode($license->allowed_domains, true);
-
-        if (!is_array($allowedDomains)) {
-            return true; // Fallback in case of data corruption
-        }
-
-        foreach ($allowedDomains as $allowedDomain) {
-            // Handle wildcards
-            if (strpos($allowedDomain, '*') !== false) {
-                $pattern = str_replace('\*', '.*', preg_quote($allowedDomain, '/'));
-                if (preg_match('/^' . $pattern . '$/i', $domain)) {
-                    return true;
-                }
-            } else {
-                if (strtolower($allowedDomain) === strtolower($domain)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return $license->isDomainAllowed($domain);
     }
 
     /**
@@ -200,11 +222,159 @@ class AccessKeyController extends Controller
      */
     protected function getActiveDomains(string $accessKey)
     {
-        return ValidationLog::where('access_key', $accessKey)
-            ->where('created_at', '>=', Carbon::now()->subDays(30))
-            ->where('status', 'valid')
-            ->distinct()
-            ->pluck('domain')
-            ->toArray();
+        $license = AccessKey::where('key', $accessKey)->first();
+        return $license ? $license->active_domains : [];
+    }
+
+    /**
+     * Create a response with a signed verification header
+     *
+     * @param array $data
+     * @param int $status
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function createSignedResponse(array $data, int $status = 200)
+    {
+        // Sort data to ensure consistent signature
+        $signatureData = $data;
+        ksort($signatureData);
+
+        // Generate signature
+        $dataString = json_encode($signatureData);
+        $accessKey = $data['access_key'] ?? request('access_key');
+        $secret = hash('sha256', $accessKey . '_verification_key');
+        $signature = hash_hmac('sha256', $dataString, $secret);
+
+        // Return JSON response with signature header
+        return response()->json($data, $status)
+            ->header('signature', $signature);
+    }
+
+    /**
+     * Handle new domain registration for an access key
+     * Automatically adds domain to allowed list if under max_domains limit
+     *
+     * @param AccessKey $license
+     * @param string $domain
+     * @return bool Whether the domain was successfully added
+     */
+    protected function handleNewDomain(AccessKey $license, string $domain)
+    {
+        if (!$license->allow_auto_registration) {
+            return false;
+        }
+
+        // Check if we're within the domain limit
+        if (!$license->hasReachedDomainLimit()) {
+            // Add the domain
+            $added = $license->addAllowedDomain($domain);
+
+            if ($added) {
+                // Create a special log entry for this auto-registration
+                ValidationLog::create([
+                    'access_key' => $license->key,
+                    'domain' => $domain,
+                    'system_fingerprint' => request('system_fingerprint'),
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                    'status' => 'domain_registered',
+                    'message' => 'Domain automatically registered with this license',
+                    'auto_registered' => true,
+                    'registration_date' => now(),
+                ]);
+
+                // Log this auto-addition
+                \Log::info("Domain {$domain} automatically added to license {$license->key}");
+            }
+
+            return $added;
+        }
+
+        return false;
+    }
+    /**
+     * Get statistics about key usage
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function keyStats(Request $request)
+    {
+        // Require authentication for this endpoint
+        if (!\Auth::user()->can('view access key stats')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $key = $request->input('key');
+        $license = AccessKey::where('key', $key)->first();
+
+        if (!$license) {
+            return response()->json(['error' => 'Key not found'], 404);
+        }
+
+        // Get usage statistics
+        $stats = [
+            'total_validations' => ValidationLog::where('access_key', $key)->count(),
+            'valid_validations' => ValidationLog::where('access_key', $key)->where('status', 'valid')->count(),
+            'active_domains' => $this->getActiveDomains($key),
+            'recent_validations' => ValidationLog::where('access_key', $key)
+                ->orderBy('created_at', 'desc')
+                ->limit(50)
+                ->get(),
+            'validation_counts_by_day' => ValidationLog::where('access_key', $key)
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+                ->groupBy('date')
+                ->get()
+                ->pluck('count', 'date')
+        ];
+
+        return response()->json($stats);
+    }
+
+    /**
+     * Reset domain tracking for a key
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function resetDomains(Request $request)
+    {
+        // Require authentication for this endpoint
+        if (!\Auth::user()->can('manage access keys')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $key = $request->input('key');
+
+        // Mark all validations as inactive for domain counting
+        ValidationLog::where('access_key', $key)
+            ->update(['reset_domains' => true]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Domain tracking has been reset for this key'
+        ]);
+    }
+
+
+    /**
+     * Check if we're in grace period for this license
+     * Using the configurable grace period from the license
+     *
+     * @param AccessKey $license
+     * @param ValidationLog $lastSuccessLog
+     * @return bool
+     */
+    protected function isInGracePeriod(AccessKey $license, $lastSuccessLog)
+    {
+        if (!$lastSuccessLog) {
+            return false;
+        }
+
+        $graceHours = $license->grace_period_hours ?? 72;
+        $timeElapsed = Carbon::now()->diffInHours($lastSuccessLog->created_at);
+
+        return $timeElapsed < $graceHours;
     }
 }

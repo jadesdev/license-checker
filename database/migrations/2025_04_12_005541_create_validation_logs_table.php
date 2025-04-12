@@ -15,6 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('access_key', 64);
             $table->string('domain');
+            $table->string('url')->nullable();
             $table->string('system_fingerprint')->nullable();
             $table->string('request_id')->nullable();
             $table->string('ip_address')->nullable();
@@ -22,6 +23,9 @@ return new class extends Migration
             $table->json('meta')->nullable();
             $table->string('status'); // valid, invalid, expired, revoked, limit_reached, domain_mismatch
             $table->text('message')->nullable();
+            $table->boolean('auto_registered')->default(false);
+            $table->boolean('reset_domains')->default(false);
+            $table->timestamp('registration_date')->nullable();
             $table->timestamps();
 
             $table->index(['access_key', 'domain', 'created_at']);
