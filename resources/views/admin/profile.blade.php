@@ -44,7 +44,7 @@
                     <input id="current_password"
                         class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
                         type="password" name="current_password">
-                    <p class="text-gray-500 text-xs mt-1">Required only if changing password</p>
+                    <p class="text-orange-500 text-xs mt-1">Required only if changing password</p>
                 </div>
 
                 <!-- New Password -->
@@ -53,7 +53,7 @@
                     <input id="password"
                         class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
                         type="password" name="password">
-                    <p class="text-gray-500 text-xs mt-1">Leave blank to keep current password</p>
+                    <p class="text-orange-500 text-xs mt-1">Leave blank to keep current password</p>
                 </div>
 
                 <div class="flex items-center justify-end">

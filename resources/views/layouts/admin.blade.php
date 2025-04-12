@@ -148,7 +148,7 @@
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar">
             <div class="p-4 flex justify-between items-center border-b border-gray-700">
-                <h2 class="font-bold text-xl">Admin Dashboard</h2>
+                <h2 class="font-bold text-xl">{{get_setting('name')}}</h2>
                 <button id="collapse-sidebar-btn" class="text-white hover:text-gray-300">
                     <i class="fas fa-chevron-left"></i>
                 </button>
@@ -227,12 +227,12 @@
                     <button id="expand-sidebar-btn" class="mr-4 text-gray-500 hover:text-gray-700">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <h1 class="text-xl font-bold">Admin Panel</h1>
+                    <h1 class="text-xl font-bold">{{get_setting('name')}}</h1>
                 </div>
                 <div class="flex items-center space-x-4">
                     <div class="relative">
                         <a href="{{route('admin.profile')}}" class="flex items-center space-x-2 focus:outline-none">
-                            <span class="hidden md:inline-block">Admin User</span>
+                            <span class="hidden md:inline-block">{{Auth::user()->name}}</span>
                             <i class="fas fa-user-circle text-2xl"></i>
                         </a>
                     </div>
@@ -246,7 +246,7 @@
 
             <!-- Footer -->
             <footer class="bg-white p-4 text-center text-sm text-gray-500">
-                &copy; {{ date('Y') }} Admin Panel
+                &copy; {{ date('Y') }} {{get_setting('title')}}
             </footer>
         </div>
     </div>
