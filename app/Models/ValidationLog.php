@@ -12,7 +12,7 @@ class ValidationLog extends Model
         'access_key',
         'domain',
         'system_fingerprint',
-        'app_version',
+        'request_id',
         'ip_address',
         'user_agent',
         'status',
