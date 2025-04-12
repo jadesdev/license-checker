@@ -88,11 +88,14 @@ class ValidationLogController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(50);
 
+        $firstSeen = ValidationLog::where('domain', $domain)->min('created_at');
+        $lastSeen = ValidationLog::where('domain', $domain)->max('created_at');
+
         $domainStats = [
             'total_validations' => ValidationLog::where('domain', $domain)->count(),
             'keys_used' => ValidationLog::where('domain', $domain)->distinct('access_key')->count('access_key'),
-            'first_seen' => ValidationLog::where('domain', $domain)->min('created_at'),
-            'last_seen' => ValidationLog::where('domain', $domain)->max('created_at'),
+            'first_seen' => $firstSeen ? Carbon::parse($firstSeen) : null,
+            'last_seen' => $lastSeen ? Carbon::parse($lastSeen) : null,
         ];
 
         return view('admin.logs.by-domain', compact('logs', 'domain', 'domainStats'));
@@ -112,11 +115,15 @@ class ValidationLogController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(50);
 
+        // Convert dates to Carbon instances
+        $firstSeen = ValidationLog::where('access_key', $access_key)->min('created_at');
+        $lastSeen = ValidationLog::where('access_key', $access_key)->max('created_at');
+
         $keyStats = [
             'total_validations' => ValidationLog::where('access_key', $access_key)->count(),
             'domains_used' => ValidationLog::where('access_key', $access_key)->distinct('domain')->count('domain'),
-            'first_seen' => ValidationLog::where('access_key', $access_key)->min('created_at'),
-            'last_seen' => ValidationLog::where('access_key', $access_key)->max('created_at'),
+            'first_seen' => $firstSeen ? Carbon::parse($firstSeen) : null,
+            'last_seen' => $lastSeen ? Carbon::parse($lastSeen) : null,
         ];
 
         return view('admin.logs.by-key', compact('logs', 'key', 'keyStats'));
@@ -130,15 +137,30 @@ class ValidationLogController extends Controller
      */
     public function byStatus($status)
     {
+        // Convert URL parameter to actual status format
+        $status = str_replace('-', ' ', $status);
+
         $logs = ValidationLog::where('status', $status)
             ->orderBy('created_at', 'desc')
             ->paginate(50);
 
+        // Get dates as Carbon instances
+        $firstSeen = ValidationLog::where('status', $status)->min('created_at');
+        $lastSeen = ValidationLog::where('status', $status)->max('created_at');
+
         $statusStats = [
             'total' => ValidationLog::where('status', $status)->count(),
-            'today' => ValidationLog::where('status', $status)->whereDate('created_at', Carbon::today())->count(),
-            'keys_affected' => ValidationLog::where('status', $status)->distinct('access_key')->count('access_key'),
-            'domains_affected' => ValidationLog::where('status', $status)->distinct('domain')->count('domain'),
+            'today' => ValidationLog::where('status', $status)
+                ->whereDate('created_at', Carbon::today())
+                ->count(),
+            'keys_affected' => ValidationLog::where('status', $status)
+                ->distinct('access_key')
+                ->count('access_key'),
+            'domains_affected' => ValidationLog::where('status', $status)
+                ->distinct('domain')
+                ->count('domain'),
+            'first_seen' => $firstSeen ? Carbon::parse($firstSeen) : null,
+            'last_seen' => $lastSeen ? Carbon::parse($lastSeen) : null,
         ];
 
         return view('admin.logs.by-status', compact('logs', 'status', 'statusStats'));
@@ -239,6 +261,13 @@ class ValidationLogController extends Controller
     {
         $log = ValidationLog::findOrFail($id);
         $log->delete();
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Log entry deleted successfully'
+            ]);
+        }
 
         return redirect()->back()
             ->with('success', 'Log entry deleted successfully.');

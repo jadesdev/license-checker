@@ -36,8 +36,9 @@ class AccessKey extends Model
         'allowed_domains' => 'json',
         'allow_auto_registration' => 'boolean',
         'allow_localhost' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
-
     /**
      * Get the validation logs for the access key
      */

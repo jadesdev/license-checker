@@ -12,6 +12,7 @@
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Tailwind Apply with Custom Utilities -->
     <style type="text/tailwindcss">
@@ -135,6 +136,7 @@
             }
         }
     </style>
+    @stack('styles')
 </head>
 
 <body class="bg-gray-100 text-gray-800">
@@ -183,12 +185,6 @@
                     <div id="logs-menu" class="nav-dropdown">
                         <a href="{{ route('admin.logs.index') }}" class="nav-item {{ request()->routeIs('admin.logs.index') ? 'active' : '' }}">
                             <i class="fas fa-list mr-3"></i> All Logs
-                        </a>
-                        <a href="{{ route('admin.logs.search') }}" class="nav-item {{ request()->routeIs('admin.logs.search') ? 'active' : '' }}">
-                            <i class="fas fa-search mr-3"></i> Search Logs
-                        </a>
-                        <a href="{{ route('admin.logs.export') }}" class="nav-item {{ request()->routeIs('admin.logs.export') ? 'active' : '' }}">
-                            <i class="fas fa-file-export mr-3"></i> Export Logs
                         </a>
                     </div>
                 </div>
@@ -258,7 +254,7 @@
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         // DOM Elements
         const sidebar = document.getElementById('sidebar');
@@ -410,6 +406,7 @@
         };
     </script>
 
+    @stack('scripts')
 </body>
 
 </html>

@@ -1,4 +1,3 @@
-{{-- resources/views/partials/sort-arrow.blade.php --}}
 @php
     $currentSort = request()->get('sort', 'created_at');
     $currentDirection = request()->get('direction', 'desc');
