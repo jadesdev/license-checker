@@ -11,7 +11,7 @@ Route::get('/', function () {
 });
 
 // admin Routes
-Route::controller(LicenseController::class)->as('admin.')->prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+Route::controller(LicenseController::class)->as('admin.')->prefix('admin')->middleware(['admin'])->group(function () {
     // List and Create
     Route::get('access-keys', 'index')->name('access-keys.index');
     Route::get('access-keys/create', 'create')->name('access-keys.create');
@@ -32,7 +32,7 @@ Route::controller(LicenseController::class)->as('admin.')->prefix('admin')->midd
 });
 
 // Validation Logs Management
-Route::controller(ValidationLogController::class)->as('admin.')->prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+Route::controller(ValidationLogController::class)->as('admin.')->prefix('admin')->middleware(['admin'])->group(function () {
     // General logs view
     Route::get('validation-logs', 'index')->name('logs.index');
 
@@ -53,7 +53,7 @@ Route::controller(ValidationLogController::class)->as('admin.')->prefix('admin')
 });
 
 // Dashboard Statistics
-Route::controller(DashboardController::class)->as('admin.')->prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+Route::controller(DashboardController::class)->as('admin.')->prefix('admin')->middleware(['admin'])->group(function () {
     Route::get('dashboard', 'index')->name('dashboard');
     Route::get('stats/usage', 'usageStats')->name('stats.usage');
     Route::get('stats/keys', 'keyStats')->name('stats.keys');
@@ -61,7 +61,7 @@ Route::controller(DashboardController::class)->as('admin.')->prefix('admin')->mi
 });
 
 // Settings
-Route::controller(SettingsController::class)->as('admin.')->prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+Route::controller(SettingsController::class)->as('admin.')->prefix('admin')->middleware(['admin'])->group(function () {
     Route::get('settings', 'index')->name('settings');
     Route::post('settings', 'update')->name('settings.update');
 

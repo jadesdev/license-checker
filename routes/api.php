@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AccessKeyController;
-use App\Http\Controllers\LicenseValidationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
