@@ -67,6 +67,7 @@ Route::middleware(['admin'])->prefix('admin')->as('admin.')->group(function () {
     // Dashboard Statistics
     Route::controller(DashboardController::class)->group(function () {
         Route::get('dashboard', 'index')->name('dashboard');
+        Route::get('', 'index')->name('index');
         Route::get('stats/usage', 'usageStats')->name('stats.usage');
         Route::get('stats/keys', 'keyStats')->name('stats.keys');
         Route::get('stats/domains', 'domainStats')->name('stats.domains');
