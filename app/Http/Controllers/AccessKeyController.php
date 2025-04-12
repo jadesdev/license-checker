@@ -34,7 +34,7 @@ class AccessKeyController extends Controller
         if ($validator->fails()) {
             return $this->createSignedResponse([
                 'valid' => false,
-                'message' => 'Invalid request: ' . $validator->errors()->first(),
+                'message' => 'Invalid request: ' ,
                 'timestamp' => time(),
             ], 400);
         }
@@ -47,12 +47,14 @@ class AccessKeyController extends Controller
 
         // Check request timestamp (prevent replay attacks)
         if (abs(time() - $request->timestamp) > 300) {
-            // return $this->createSignedResponse([
-            //     'valid' => false,
-            //     'message' => 'Request timestamp is too old or in the future',
-            //     'timestamp' => time(),
-            // ]);
+            return $this->createSignedResponse([
+                'valid' => false,
+                'message' => 'Request is invalid',
+                'timestamp' => time(),
+            ]);
         }
+
+        //TODO:  add a check for the referr
 
         // Implement rate limiting per access key and IP
         $rateLimitKey = 'ratelimit:' . md5($accessKey . $request->ip());
