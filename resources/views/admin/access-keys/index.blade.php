@@ -1,4 +1,5 @@
 @extends('layouts.admin')
+@section('title', 'Access keys')
 
 @section('content')
     <div class="flex items-center justify-between mb-6">

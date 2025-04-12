@@ -12,3 +12,5 @@
         <button type="submit" class="btn btn-primary mt-4">Update Key</button>
     </form>
 @endsection
+
+@section('title', 'Edit Access key')

@@ -23,6 +23,7 @@ return new class extends Migration
             $table->json('metadata')->nullable(); // JSON array of additional metadata
             $table->timestamp('expires_at')->nullable();
             $table->timestamp('last_used_at')->nullable();
+            $table->enum('status', ['active','revoked','expired','pending'])->default('active');
             $table->boolean('revoked')->default(false);
             $table->text('revocation_reason')->nullable();
             $table->boolean('allow_auto_registration')->default(true);

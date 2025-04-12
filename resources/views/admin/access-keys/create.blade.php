@@ -11,3 +11,4 @@
         <button type="submit" class="btn btn-primary mt-4">Create Key</button>
     </form>
 @endsection
+@section('title', 'Create Access key')

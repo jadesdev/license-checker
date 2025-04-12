@@ -138,7 +138,7 @@ class ValidationLogController extends Controller
     public function byStatus($status)
     {
         // Convert URL parameter to actual status format
-        $status = str_replace('-', ' ', $status);
+        $status = str_replace('-', '_', $status);
 
         $logs = ValidationLog::where('status', $status)
             ->orderBy('created_at', 'desc')
