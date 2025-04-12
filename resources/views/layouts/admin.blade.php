@@ -231,10 +231,10 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <div class="relative">
-                        <button class="flex items-center space-x-2 focus:outline-none">
+                        <a href="{{route('admin.profile')}}" class="flex items-center space-x-2 focus:outline-none">
                             <span class="hidden md:inline-block">Admin User</span>
                             <i class="fas fa-user-circle text-2xl"></i>
-                        </button>
+                        </a>
                     </div>
                 </div>
             </header>

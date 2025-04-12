@@ -15,7 +15,8 @@
                                 <span class="h-2 w-2 rounded-full mr-2 @if ($tier->status) bg-green-500 @else bg-red-500 @endif"></span>
                                 <span>Tier #{{ $loop->iteration }}</span>
                             </h3>
-                            <button type="button" class="text-gray-400 hover:text-red-600 transition-colors duration-200 remove-tier group flex items-center rounded-md p-1 border border-red-300">
+                            <button type="button"
+                                class="text-gray-400 hover:text-red-600 transition-colors duration-200 remove-tier group flex items-center rounded-md p-1 border border-red-300">
                                 <i class="fa-solid fa-trash-can mr-1"></i>
                                 <span class="text-sm group-hover:text-red-600 ">Remove</span>
                             </button>

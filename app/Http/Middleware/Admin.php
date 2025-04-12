@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use Auth;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,6 +16,11 @@ class Admin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        return $next($request);
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            return $next($request);
+        }
+        // Logout
+        Auth::logout();
+        return redirect()->route('admin.login')->with('error', 'You are not authorised access.');
     }
 }
