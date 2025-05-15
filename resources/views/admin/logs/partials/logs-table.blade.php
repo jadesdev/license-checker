@@ -96,7 +96,7 @@
             // Open modal and show metadata
             document.querySelectorAll('.view-metadata').forEach(button => {
                 button.addEventListener('click', function() {
-                    const metadata = JSON.parse(this.dataset.metadata || '{}');
+                    const metadata = JSON.parse(this.dataset.log || '{}');
 
                     // Pretty print JSON
                     content.textContent = JSON.stringify(metadata, null, 4);
