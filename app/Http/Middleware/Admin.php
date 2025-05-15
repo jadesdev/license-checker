@@ -21,6 +21,7 @@ class Admin
         }
         // Logout
         Auth::logout();
+
         return redirect()->route('admin.login')->with('error', 'You are not authorised access.');
     }
 }

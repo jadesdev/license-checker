@@ -23,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('validation_logs', function (Blueprint $table) {
-            $table->dropColumn([ 'metadata', 'main_domain']);
+            $table->dropColumn(['metadata', 'main_domain']);
         });
     }
 };

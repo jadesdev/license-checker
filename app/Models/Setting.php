@@ -38,7 +38,7 @@ class Setting extends Model
         'registration_active',
         'default_license_term',
         'max_domains_per_license',
-        'license_expiration_alert'
+        'license_expiration_alert',
     ];
 
     protected $casts = [

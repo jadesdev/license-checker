@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\ValidationLog;
 use App\Models\AccessKey;
+use App\Models\ValidationLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -63,11 +63,12 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($item) {
                 $key = AccessKey::where('key', $item->access_key)->first();
+
                 return [
                     'key' => $item->access_key,
                     'owner_name' => $key ? $key->owner_name : 'Unknown',
                     'owner_email' => $key ? $key->owner_email : 'Unknown',
-                    'validation_count' => $item->validation_count
+                    'validation_count' => $item->validation_count,
                 ];
             });
 
@@ -103,7 +104,6 @@ class DashboardController extends Controller
     /**
      * Display detailed usage statistics
      *
-     * @param Request $request
      * @return \Illuminate\View\View
      */
     public function usageStats(Request $request)
@@ -212,7 +212,6 @@ class DashboardController extends Controller
     /**
      * Display detailed access key statistics
      *
-     * @param Request $request
      * @return \Illuminate\View\View
      */
     public function keyStats(Request $request)
@@ -290,7 +289,7 @@ class DashboardController extends Controller
             'expired' => $keys->where('is_expired', true)->count(),
             'expiring_soon' => $keys->filter(function ($item) {
                 return $item['key']->expires_at &&
-                    !Carbon::parse($item['key']->expires_at)->isPast() &&
+                    ! Carbon::parse($item['key']->expires_at)->isPast() &&
                     Carbon::parse($item['key']->expires_at)->diffInDays() <= 30;
             })->count(),
             'unused' => $keys->where('total_validations', 0)->count(),
@@ -315,7 +314,6 @@ class DashboardController extends Controller
     /**
      * Display detailed domain statistics
      *
-     * @param Request $request
      * @return \Illuminate\View\View
      */
     public function domainStats(Request $request)

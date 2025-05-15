@@ -11,4 +11,3 @@ Route::get('/user', function (Request $request) {
 Route::middleware(['throttle:30,1'])->group(function () {
     Route::post('/validate', [AccessKeyController::class, 'validate']);
 });
-

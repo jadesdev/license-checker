@@ -23,7 +23,7 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'current_password' => ['nullable', 'required_with:password', function ($attribute, $value, $fail) use ($user) {
-                if (!Hash::check($value, $user->password)) {
+                if (! Hash::check($value, $user->password)) {
                     $fail('The current password is incorrect.');
                 }
             }],

@@ -14,9 +14,10 @@ class SettingsController extends Controller
     {
         return view('admin.settings.index', [
             'settings' => Setting::firstOrNew(),
-            'title' => 'General Settings'
+            'title' => 'General Settings',
         ]);
     }
+
     public function update(Request $request)
     {
         $settings = Setting::firstOrNew();
@@ -25,14 +26,14 @@ class SettingsController extends Controller
         $input['registration_active'] = $request->boolean('registration_active');
         if ($request->hasFile('favicon')) {
             $image = $request->file('favicon');
-            $imageName = \Str::random(5) . '-favicon.png';
+            $imageName = \Str::random(5).'-favicon.png';
             $image->move(public_path('uploads'), $imageName);
             $input['favicon'] = $imageName;
         }
 
         if ($request->hasFile('logo')) {
             $image = $request->file('logo');
-            $imageName = \Str::random(5) . '-logo.png';
+            $imageName = \Str::random(5).'-logo.png';
             $image->move(public_path('uploads'), $imageName);
             $input['logo'] = $imageName;
         }
@@ -50,7 +51,7 @@ class SettingsController extends Controller
     {
         return view('admin.settings.index', [
             'tiers' => LicenseTier::orderBy('order')->get(),
-            'title' => 'License Tiers'
+            'title' => 'License Tiers',
         ]);
     }
 

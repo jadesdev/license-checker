@@ -46,6 +46,7 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
     /**
      * Check if the user is an admin.
      *

@@ -15,7 +15,6 @@ class LicenseController extends Controller
     /**
      * Display a listing of all access keys
      *
-     * @param Request $request
      * @return \Illuminate\View\View
      */
     public function index(Request $request)
@@ -71,7 +70,7 @@ class LicenseController extends Controller
                 ->whereNotNull('expires_at')
                 ->where('expires_at', '<', Carbon::now())
                 ->count(),
-            'revoked' => AccessKey::where('revoked', true)->count()
+            'revoked' => AccessKey::where('revoked', true)->count(),
         ];
 
         $tiers = AccessKey::distinct('tier')->pluck('tier');
@@ -92,7 +91,6 @@ class LicenseController extends Controller
     /**
      * Store a newly created access key
      *
-     * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
@@ -127,7 +125,7 @@ class LicenseController extends Controller
         }
 
         // Create the new access key
-        $accessKey = new AccessKey();
+        $accessKey = new AccessKey;
         $accessKey->key = Str::uuid();
         $accessKey->owner_name = $request->owner_name;
         $accessKey->owner_email = $request->owner_email;
@@ -149,7 +147,7 @@ class LicenseController extends Controller
     /**
      * Display the specified access key
      *
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\View\View
      */
     public function show($id)
@@ -193,7 +191,7 @@ class LicenseController extends Controller
     /**
      * Show form for editing the specified access key
      *
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\View\View
      */
     public function edit($id)
@@ -202,7 +200,7 @@ class LicenseController extends Controller
 
         // Format domains as text for textarea
         $domainsText = '';
-        if (!empty($key->allowed_domains) && is_array($key->allowed_domains)) {
+        if (! empty($key->allowed_domains) && is_array($key->allowed_domains)) {
             $domainsText = implode("\n", $key->allowed_domains);
         }
 
@@ -212,8 +210,7 @@ class LicenseController extends Controller
     /**
      * Update the specified access key
      *
-     * @param Request $request
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, $id)
@@ -270,7 +267,7 @@ class LicenseController extends Controller
     /**
      * Remove the specified access key
      *
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy($id)
@@ -288,8 +285,7 @@ class LicenseController extends Controller
     /**
      * Revoke the specified access key
      *
-     * @param Request $request
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\RedirectResponse
      */
     public function revoke(Request $request, $id)
@@ -317,7 +313,7 @@ class LicenseController extends Controller
     /**
      * Restore a revoked access key
      *
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\RedirectResponse
      */
     public function restore($id)
@@ -335,7 +331,7 @@ class LicenseController extends Controller
     /**
      * Reset domain tracking for a key
      *
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\RedirectResponse
      */
     public function resetDomains($id)
@@ -353,8 +349,7 @@ class LicenseController extends Controller
     /**
      * Extend the validity of an access key
      *
-     * @param Request $request
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\RedirectResponse
      */
     public function extendValidity(Request $request, $id)
@@ -391,8 +386,7 @@ class LicenseController extends Controller
     /**
      * Manage allowed domains for a key
      *
-     * @param Request $request
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\RedirectResponse
      */
     public function manageDomains(Request $request, $id)
@@ -405,15 +399,17 @@ class LicenseController extends Controller
         if ($action === 'add' && $request->filled('new_domain')) {
             $newDomain = trim($request->input('new_domain'));
             $key->addAllowedDomain($newDomain);
+
             return redirect()->route('admin.access-keys.show', $key->id)
                 ->with('success', "Domain '{$newDomain}' added successfully.");
         } elseif ($action === 'remove' && $domain) {
             $key->removeAllowedDomain($domain);
+
             return redirect()->route('admin.access-keys.show', $key->id)
                 ->with('success', "Domain '{$domain}' removed successfully.");
         }
 
         return redirect()->route('admin.access-keys.show', $key->id)
-            ->with('error', "Invalid domain management action.");
+            ->with('error', 'Invalid domain management action.');
     }
 }
