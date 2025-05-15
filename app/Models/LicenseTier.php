@@ -11,7 +11,7 @@ class LicenseTier extends Model
         'price',
         'duration',
         'status',
-        'order'
+        'order',
     ];
 
     protected $casts = [

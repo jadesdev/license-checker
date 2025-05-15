@@ -39,6 +39,7 @@ class AccessKey extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
     /**
      * Get the validation logs for the access key
      */
@@ -73,7 +74,7 @@ class AccessKey extends Model
 
         $allowedDomains = $this->allowed_domains;
 
-        if (!is_array($allowedDomains)) {
+        if (! is_array($allowedDomains)) {
             return true; // Fallback in case of data corruption
         }
 
@@ -86,7 +87,7 @@ class AccessKey extends Model
             // Handle wildcards
             if (strpos($allowedDomain, '*') !== false) {
                 $pattern = str_replace('\*', '.*', preg_quote($allowedDomain, '/'));
-                if (preg_match('/^' . $pattern . '$/i', $domain)) {
+                if (preg_match('/^'.$pattern.'$/i', $domain)) {
                     return true;
                 }
             } else {
@@ -106,7 +107,7 @@ class AccessKey extends Model
     {
         $allowedDomains = $this->allowed_domains ?: [];
 
-        if (!in_array($domain, $allowedDomains)) {
+        if (! in_array($domain, $allowedDomains)) {
             $allowedDomains[] = $domain;
             $this->allowed_domains = $allowedDomains;
             $this->save();
@@ -164,7 +165,7 @@ class AccessKey extends Model
      */
     public function getDaysUntilExpirationAttribute()
     {
-        if (!$this->expires_at) {
+        if (! $this->expires_at) {
             return null;
         }
 

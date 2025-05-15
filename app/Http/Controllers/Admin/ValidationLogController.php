@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\ValidationLog;
 use App\Models\AccessKey;
+use App\Models\ValidationLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
@@ -14,7 +14,6 @@ class ValidationLogController extends Controller
     /**
      * Display a listing of all validation logs
      *
-     * @param Request $request
      * @return \Illuminate\View\View
      */
     public function index(Request $request)
@@ -27,7 +26,7 @@ class ValidationLogController extends Controller
         }
 
         if ($request->filled('domain')) {
-            $query->where('domain', 'like', '%' . $request->domain . '%');
+            $query->where('domain', 'like', '%'.$request->domain.'%');
         }
 
         if ($request->filled('status')) {
@@ -43,7 +42,7 @@ class ValidationLogController extends Controller
         }
 
         if ($request->filled('ip')) {
-            $query->where('ip_address', 'like', '%' . $request->ip . '%');
+            $query->where('ip_address', 'like', '%'.$request->ip.'%');
         }
 
         // Sorting
@@ -60,7 +59,7 @@ class ValidationLogController extends Controller
             ->map(function ($key) {
                 return [
                     'key' => $key->key,
-                    'label' => "{$key->owner_name} ({$key->owner_email}) - {$key->key}"
+                    'label' => "{$key->owner_name} ({$key->owner_email}) - {$key->key}",
                 ];
             });
 
@@ -79,7 +78,7 @@ class ValidationLogController extends Controller
     /**
      * Display logs for a specific domain
      *
-     * @param string $domain
+     * @param  string  $domain
      * @return \Illuminate\View\View
      */
     public function byDomain($domain)
@@ -104,7 +103,7 @@ class ValidationLogController extends Controller
     /**
      * Display logs for a specific access key
      *
-     * @param string $access_key
+     * @param  string  $access_key
      * @return \Illuminate\View\View
      */
     public function byKey($access_key)
@@ -132,7 +131,7 @@ class ValidationLogController extends Controller
     /**
      * Display logs for a specific status
      *
-     * @param string $status
+     * @param  string  $status
      * @return \Illuminate\View\View
      */
     public function byStatus($status)
@@ -169,7 +168,6 @@ class ValidationLogController extends Controller
     /**
      * Search for logs
      *
-     * @param Request $request
      * @return \Illuminate\View\View
      */
     public function search(Request $request)
@@ -193,7 +191,6 @@ class ValidationLogController extends Controller
     /**
      * Export logs as CSV
      *
-     * @param Request $request
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function export(Request $request)
@@ -206,7 +203,7 @@ class ValidationLogController extends Controller
         }
 
         if ($request->filled('domain')) {
-            $query->where('domain', 'like', '%' . $request->domain . '%');
+            $query->where('domain', 'like', '%'.$request->domain.'%');
         }
 
         if ($request->filled('status')) {
@@ -225,7 +222,7 @@ class ValidationLogController extends Controller
         $logs = $query->orderBy('created_at', 'desc')->limit(10000)->get();
 
         // Create CSV
-        $filename = 'validation_logs_' . date('Y-m-d_His') . '.csv';
+        $filename = 'validation_logs_'.date('Y-m-d_His').'.csv';
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
@@ -254,7 +251,7 @@ class ValidationLogController extends Controller
     /**
      * Delete a specific log entry
      *
-     * @param string $id
+     * @param  string  $id
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy($id)
@@ -265,7 +262,7 @@ class ValidationLogController extends Controller
         if (request()->ajax() || request()->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Log entry deleted successfully'
+                'message' => 'Log entry deleted successfully',
             ]);
         }
 
@@ -276,7 +273,6 @@ class ValidationLogController extends Controller
     /**
      * Clean up old log entries
      *
-     * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function cleanup(Request $request)
