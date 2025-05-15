@@ -24,6 +24,8 @@ class ValidationLog extends Model
         'auto_registered',
         'reset_domains',
         'registration_date',
+        'main_domain',
+        'metadata',
     ];
 
     protected $casts = [
@@ -31,6 +33,7 @@ class ValidationLog extends Model
         'auto_registered' => 'boolean',
         'reset_domains' => 'boolean',
         'registration_date' => 'datetime',
+        'metadata' => 'json',
     ];
 
     /**

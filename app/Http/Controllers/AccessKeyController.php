@@ -34,13 +34,15 @@ class AccessKeyController extends Controller
         if ($validator->fails()) {
             return $this->createSignedResponse([
                 'valid' => false,
-                'message' => 'Invalid request: ' ,
+                'message' => 'Invalid request: ',
                 'timestamp' => time(),
             ], 400);
         }
 
         // Extract validated data
+        $metadata = $request->all();
         $domain = $request->domain;
+        $mainDomain = $this->extractMainDomain($domain);
         $accessKey = $request->access_key;
         $fingerprint = $request->system_fingerprint;
         $requestId = $request->request_id;
@@ -76,12 +78,14 @@ class AccessKeyController extends Controller
         // Log this validation attempt regardless of outcome
         $log = new ValidationLog();
         $log->domain = $domain;
+        $log->main_domain = $mainDomain;
         $log->access_key = $accessKey;
         $log->system_fingerprint = $fingerprint;
         $log->request_id = $requestId;
         $log->ip_address = $request->ip();
         $log->user_agent = $request->userAgent();
         $log->url = $request->url;
+        $log->metadata = ($metadata);
 
         // Begin validation process
         $message = '';
@@ -130,7 +134,7 @@ class AccessKeyController extends Controller
         }
 
         // // Check if domain is allowed
-        if (!$this->isDomainAllowed($license, $domain) && !$license->allow_auto_registration ) {
+        if (!$this->isDomainAllowed($license, $domain) && !$license->allow_auto_registration) {
             $message = 'Access key is not valid for this domain';
             $log->status = 'domain_mismatch';
             $log->message = $message;
@@ -376,5 +380,57 @@ class AccessKeyController extends Controller
         $timeElapsed = Carbon::now()->diffInHours($lastSuccessLog->created_at);
 
         return $timeElapsed < $graceHours;
+    }
+
+    /**
+     * Extract the main domain from a full domain string
+     * 
+     * @param string $domain
+     * @return string
+     */
+    protected function extractMainDomain(string $host): string
+    {
+        // Normalize host (strip protocol, trailing slashes)
+        $host = strtolower(trim(preg_replace('/^https?:\/\//', '', $host)));
+        $host = preg_replace('/\/.*$/', '', $host); // Remove path
+
+        // Common public suffixes
+        $multiPartTLDs = [
+            'co.uk',
+            'org.uk',
+            'ac.uk',
+            'gov.uk',
+            'com.ng',
+            'gov.ng',
+            'edu.ng',
+            'org.ng',
+            'net.ng',
+            'co.za',
+            'org.za',
+        ];
+
+        foreach ($multiPartTLDs as $tld) {
+            if (str_ends_with($host, '.' . $tld)) {
+                $parts = explode('.', $host);
+                $domainParts = array_slice($parts, - ($this->countDots($tld) + 2));
+                return implode('.', $domainParts);
+            }
+        }
+
+        // Default fallback for single-part TLDs like .com, .net
+        $parts = explode('.', $host);
+        $count = count($parts);
+
+        if ($count >= 2) {
+            return $parts[$count - 2] . '.' . $parts[$count - 1];
+        }
+
+        // Fallback (e.g. localhost or invalid domain)
+        return $host;
+    }
+
+    protected function countDots(string $str): int
+    {
+        return substr_count($str, '.');
     }
 }
