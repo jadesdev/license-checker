@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('validation_logs', function (Blueprint $table) {
-            $table->json('metadata')->nullable();
+            $table->json('metadata')->nullable()->after('registration_date');
             $table->string('main_domain')->nullable()->after('domain');
         });
     }
