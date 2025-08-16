@@ -73,7 +73,7 @@
     </table>
 </div>
 <!-- Metadata Modal -->
-<div id="metadataModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center">
+<div id="metadataModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 items-center justify-center">
     <div class="bg-white w-full max-w-lg rounded-lg shadow-lg p-6 relative">
         <button id="closeModal"
             class="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-xl">&times;</button>
@@ -102,6 +102,7 @@
                     content.textContent = JSON.stringify(metadata, null, 4);
 
                     modal.classList.remove('hidden');
+                    modal.classList.add('flex');
                 });
             });
 
